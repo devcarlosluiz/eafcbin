@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import io
 from datetime import datetime, time as hora_do_dia
-from decimal import Decimal
 from unittest.mock import patch
 
 from django.core.cache import cache
@@ -39,8 +38,9 @@ class PersistenciaTest(TestCase):
         jogador = Jogador.objects.get(pk=1)
         self.assertEqual(jogador.nome, "J. Silva")
         self.assertEqual(jogador.idade, 21)
-        self.assertEqual(jogador.passe, Decimal("475200.00"))
         self.assertEqual(jogador.bola_nome, "Carta Azul")
+        self.assertFalse(hasattr(jogador, "passe"))
+        self.assertFalse(hasattr(jogador, "nome_escudo"))
         # O payload cru fica guardado inteiro.
         self.assertEqual(jogador.payload_lista["id"], 1)
 
@@ -58,21 +58,19 @@ class PersistenciaTest(TestCase):
 
         modificado = item_lista(1)
         modificado["overall"] = 99
-        modificado["passe"] = "1.000.000,00"
         modificado["a_venda"] = True
         situacao, campos = persistencia.salvar_jogador(modificado)
 
         self.assertEqual(situacao, persistencia.ALTERADO)
-        self.assertEqual(campos, 3)
+        self.assertEqual(campos, 2)
 
         jogador = Jogador.objects.get(pk=1)
         self.assertEqual(jogador.overall, 99)
-        self.assertEqual(jogador.passe, Decimal("1000000.00"))
         # >= e não >: no Windows duas chamadas podem cair no mesmo tick do relógio.
         self.assertGreaterEqual(jogador.alterado_em, antes)
 
         mudancas = {a.campo: (a.de, a.para) for a in Alteracao.objects.all()}
-        self.assertEqual(set(mudancas), {"overall", "passe", "a_venda"})
+        self.assertEqual(set(mudancas), {"overall", "a_venda"})
         self.assertEqual(mudancas["overall"][1], "99")
         self.assertEqual(mudancas["a_venda"], ("False", "True"))
 

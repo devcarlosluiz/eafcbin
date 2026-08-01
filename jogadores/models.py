@@ -10,8 +10,6 @@ modelados em coluna.
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 from django.db import models
 
 from .data import fifa_labels
@@ -44,18 +42,13 @@ class Jogador(models.Model):
     overall = models.PositiveSmallIntegerField("overall", default=0, db_index=True)
     posicao = models.CharField("posição", max_length=8, blank=True, db_index=True)
 
-    passe = models.DecimalField(
-        "valor de mercado", max_digits=16, decimal_places=2, default=Decimal("0")
-    )
     multa = models.BigIntegerField("multa rescisória", default=0)
 
     nacionalidade = models.CharField("nacionalidade", max_length=80, blank=True, db_index=True)
     nacionalidade_flag = models.URLField("bandeira", max_length=500, blank=True)
     foto = models.URLField("foto", max_length=500, blank=True)
 
-    # Clube dentro da liga — diferente de `detalhe.time` (clube da vida real).
-    nome_escudo = models.CharField("clube na liga", max_length=180, blank=True, db_index=True)
-    link_escudo = models.URLField("escudo", max_length=500, blank=True)
+    #: Time/valor de mercado do jogador não entram no acervo, de propósito.
     usuario_id = models.BigIntegerField("dono na liga", null=True, blank=True, db_index=True)
 
     usuario_id_emprestimo = models.BigIntegerField("clube de empréstimo", null=True, blank=True)
@@ -136,7 +129,6 @@ class JogadorDetalhe(models.Model):
 
     nome_completo = models.CharField(max_length=200, blank=True)
     slug = models.SlugField(max_length=200, blank=True)
-    #: Clube da vida real — não confundir com `Jogador.nome_escudo`.
     time = models.CharField("time (vida real)", max_length=180, blank=True)
     potencial = models.PositiveSmallIntegerField(null=True, blank=True)
     altura = models.PositiveSmallIntegerField("altura (cm)", null=True, blank=True)

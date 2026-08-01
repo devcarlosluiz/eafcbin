@@ -1,8 +1,6 @@
 # Segredos e estado local — nunca entram na imagem.
 .env
 .arena_cookies.txt
-db.sqlite3
-db.sqlite3-journal
 dados/
 
 # Python
