@@ -12,9 +12,10 @@ x-comum: &comum
       required: false
   environment:
     # Sobrepõem o .env: no contêiner quem serve os estáticos é o WhiteNoise,
-    # então DEBUG fica desligado.
+    # então DEBUG fica desligado. DJANGO_ALLOWED_HOSTS continua vindo do .env
+    # (adicione lá o domínio/IP público) — aqui só garante um padrão local.
     DJANGO_DEBUG: "False"
-    DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0"
+    DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}"
     DJANGO_DATA_DIR: /app/dados
     # Sempre aponta para o serviço `db` deste Compose — ignora qualquer
     # DATABASE_URL que venha do .env (esse é só para rodar fora do Docker).
