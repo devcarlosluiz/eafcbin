@@ -1,0 +1,38 @@
+{% comment %}Paginação do acervo (Django Paginator). Preserva os filtros da URL.{% endcomment %}
+{% if pagina.paginator.num_pages > 1 %}
+{% with qs=querystring %}
+<nav class="painel flex flex-wrap items-center justify-center gap-1.5 px-4 py-3" aria-label="Paginação">
+
+  {% if pagina.has_previous %}
+    <a href="?page=1{% if qs %}&{{ qs }}{% endif %}" class="btn-neutro !px-3 !py-1.5 text-xs">« Primeira</a>
+    <a href="?page={{ pagina.previous_page_number }}{% if qs %}&{{ qs }}{% endif %}"
+       class="btn-neutro !px-3 !py-1.5 text-xs">‹ Anterior</a>
+  {% else %}
+    <span class="btn-neutro !px-3 !py-1.5 text-xs opacity-30">« Primeira</span>
+    <span class="btn-neutro !px-3 !py-1.5 text-xs opacity-30">‹ Anterior</span>
+  {% endif %}
+
+  {% for numero in intervalo_paginas %}
+    {% if numero == reticencias %}
+      <span class="px-2 text-slate-600">…</span>
+    {% elif numero == pagina.number %}
+      <span aria-current="page"
+            class="grid h-8 min-w-8 place-items-center rounded-lg bg-emerald-500 px-2.5 text-xs font-bold text-night-900">{{ numero }}</span>
+    {% else %}
+      <a href="?page={{ numero }}{% if qs %}&{{ qs }}{% endif %}"
+         class="grid h-8 min-w-8 place-items-center rounded-lg border border-white/10 px-2.5 text-xs font-semibold text-slate-300 hover:bg-white/[.08]">{{ numero }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if pagina.has_next %}
+    <a href="?page={{ pagina.next_page_number }}{% if qs %}&{{ qs }}{% endif %}"
+       class="btn-neutro !px-3 !py-1.5 text-xs">Próxima ›</a>
+    <a href="?page={{ pagina.paginator.num_pages }}{% if qs %}&{{ qs }}{% endif %}"
+       class="btn-neutro !px-3 !py-1.5 text-xs">Última »</a>
+  {% else %}
+    <span class="btn-neutro !px-3 !py-1.5 text-xs opacity-30">Próxima ›</span>
+    <span class="btn-neutro !px-3 !py-1.5 text-xs opacity-30">Última »</span>
+  {% endif %}
+</nav>
+{% endwith %}
+{% endif %}

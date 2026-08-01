@@ -1,0 +1,87 @@
+{% load painel %}
+<article class="group relative overflow-hidden rounded-2xl border border-white/[.07] bg-gradient-to-b from-white/[.06] to-white/[.02] transition hover:border-emerald-500/40 hover:shadow-carta">
+
+  <!-- faixa colorida do setor -->
+  <span class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r {{ jogador.setor|cor_setor }}"></span>
+
+  <a href="{{ jogador.url }}" class="block p-4">
+    <div class="flex gap-3.5">
+      <!-- foto + overall -->
+      <div class="relative shrink-0">
+        {% if jogador.foto %}
+          <img src="{{ jogador.foto }}" alt="{{ jogador.nome }}" loading="lazy"
+               class="h-[70px] w-[70px] rounded-xl bg-night-800 object-cover ring-1 ring-white/10">
+        {% else %}
+          <div class="grid h-[70px] w-[70px] place-items-center rounded-xl bg-night-800 text-slate-600 ring-1 ring-white/10">
+            <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
+            </svg>
+          </div>
+        {% endif %}
+        <span class="absolute -bottom-2 -right-2 grid h-8 w-8 place-items-center rounded-lg
+                     bg-gradient-to-br {{ jogador.setor|cor_setor }} font-display text-base
+                     font-bold text-night-900 shadow-lg">
+          {{ jogador.overall }}
+        </span>
+      </div>
+
+      <!-- identificação -->
+      <div class="min-w-0 flex-1">
+        <h3 class="truncate font-semibold text-slate-100 group-hover:text-white">
+          {{ jogador.nome }}
+        </h3>
+        <p class="mt-0.5 flex items-center gap-1.5 text-xs text-slate-400">
+          {% if jogador.nacionalidade_flag %}
+            <img src="{{ jogador.nacionalidade_flag }}" alt="" class="h-3 w-auto rounded-[2px]">
+          {% endif %}
+          <span class="truncate">{{ jogador.nacionalidade|default:"—" }}</span>
+          {% if jogador.idade %}<span class="text-slate-600">·</span><span>{{ jogador.idade }} anos</span>{% endif %}
+        </p>
+        <p class="mt-1.5 text-xs text-slate-500">{{ jogador.posicao_nome }}</p>
+      </div>
+
+      <!-- posição -->
+      <span class="h-fit shrink-0 rounded-md border border-white/10 bg-night-900/60 px-2 py-1
+                   font-display text-sm font-bold tracking-wide text-slate-200">
+        {{ jogador.posicao|default:"—" }}
+      </span>
+    </div>
+
+    <!-- radar resumido (quando há ficha) -->
+    {% if jogador.tem_detalhe %}
+      <div class="mt-4 grid grid-cols-6 gap-1.5">
+        {% for eixo in jogador.detalhe.radar %}
+          <div class="text-center">
+            <p class="font-display text-sm font-bold {{ eixo.valor|cor_texto }}">{{ eixo.valor }}</p>
+            <p class="text-[9px] font-semibold uppercase tracking-wider text-slate-500">{{ eixo.sigla }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if jogador.multa %}
+      <div class="mt-4 flex items-end justify-between border-t border-white/[.07] pt-3">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Multa rescisória</p>
+        <p class="font-display text-lg font-bold text-slate-300">{{ jogador.multa|compacto }}</p>
+      </div>
+    {% endif %}
+  </a>
+
+  <!-- selos de situação -->
+  <div class="pointer-events-none absolute right-3 top-3 flex flex-col items-end gap-1">
+    {% if jogador.meu_jogador %}
+      <span class="selo bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30">Meu</span>
+    {% endif %}
+    {% if jogador.in_leilao %}
+      <span class="selo bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30">Leilão</span>
+    {% endif %}
+    {% if jogador.a_venda %}
+      <span class="selo bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/30">
+        À venda{% if jogador.valor_a_venda %} · {{ jogador.valor_a_venda|compacto }}{% endif %}
+      </span>
+    {% endif %}
+    {% if jogador.favorito %}
+      <span class="selo bg-rose-500/20 text-rose-300 ring-1 ring-rose-500/30">★</span>
+    {% endif %}
+  </div>
+</article>

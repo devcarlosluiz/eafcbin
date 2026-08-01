@@ -1,0 +1,225 @@
+{% load painel %}
+{% comment %}
+  Corpo da ficha do jogador — card + atributos. Compartilhado pelo painel ao
+  vivo (dominio.Jogador/Ficha) e pelo acervo (models.Jogador/JogadorDetalhe):
+  ambos expõem o mesmo contrato (setor, radar, grupos_atributos, …).
+  Espera no contexto: `jogador` e `ficha`.
+{% endcomment %}
+<div class="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
+
+  <!-- ======================= CARD ======================= -->
+  <div class="space-y-6 lg:sticky lg:top-6 lg:self-start">
+    <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[.09] to-white/[.02] p-6 shadow-carta">
+      <span class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r {{ jogador.setor|cor_setor }}"></span>
+
+      <div class="flex items-start gap-5">
+        <div class="text-center">
+          <p class="font-display text-5xl font-bold leading-none text-white">{{ jogador.overall }}</p>
+          <p class="mt-1 font-display text-lg font-bold tracking-wider text-emerald-400">
+            {{ jogador.posicao|default:"—" }}
+          </p>
+          {% if ficha.potencial %}
+            <p class="mt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Potencial</p>
+            <p class="font-display text-xl font-bold text-slate-300">{{ ficha.potencial }}</p>
+          {% endif %}
+        </div>
+
+        <div class="relative flex-1">
+          {% if jogador.foto %}
+            <img src="{{ jogador.foto }}" alt="{{ jogador.nome }}"
+                 class="mx-auto h-32 w-32 rounded-2xl bg-night-800 object-cover ring-1 ring-white/10">
+          {% endif %}
+          {% if jogador.bola_link %}
+            <img src="{{ jogador.bola_link }}" alt="{{ jogador.bola_nome }}" title="{{ jogador.bola_nome }}"
+                 class="absolute -bottom-2 -right-1 h-11 w-11 object-contain drop-shadow-lg">
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="mt-5 border-t border-white/[.07] pt-4">
+        <h1 class="font-display text-3xl font-bold uppercase leading-tight tracking-wide text-white">
+          {{ jogador.nome }}
+        </h1>
+        {% if ficha.nome_completo and ficha.nome_completo != jogador.nome %}
+          <p class="mt-0.5 text-sm text-slate-400">{{ ficha.nome_completo }}</p>
+        {% endif %}
+
+        <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-slate-300">
+          <span class="flex items-center gap-1.5">
+            {% if jogador.nacionalidade_flag %}
+              <img src="{{ jogador.nacionalidade_flag }}" alt="" class="h-3.5 w-auto rounded-[2px]">
+            {% endif %}
+            {{ jogador.nacionalidade|default:"—" }}
+          </span>
+          {% if ficha.time %}
+            <span class="text-slate-600">·</span>
+            <span title="Clube da vida real">{{ ficha.time }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap gap-1.5">
+        {% if ficha.face_real %}
+          <span class="selo bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/30">Face real</span>
+        {% endif %}
+        <span class="selo bg-white/[.06] text-slate-400 ring-1 ring-white/10">ID {{ jogador.id }}</span>
+      </div>
+    </div>
+
+    {% if ficha %}
+      <div class="painel p-5">
+        <h2 class="mb-4 font-display text-lg font-bold uppercase tracking-wide text-white">Perfil físico</h2>
+        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          {% include "jogadores/partials/dado.html" with rotulo="Idade" valor=jogador.idade|default:"—" %}
+          {% include "jogadores/partials/dado.html" with rotulo="Altura" valor=ficha.altura|default:"—" sufixo=" cm" %}
+          {% include "jogadores/partials/dado.html" with rotulo="Peso" valor=ficha.peso|default:"—" sufixo=" kg" %}
+          {% include "jogadores/partials/dado.html" with rotulo="Pé preferido" valor=ficha.pe|pe_extenso %}
+          {% include "jogadores/partials/dado.html" with rotulo="Porte físico" valor=ficha.porte_fisico|default:"—" %}
+          {% include "jogadores/partials/dado.html" with rotulo="Aceleração" valor=ficha.tipo_aceleracao|default:"—" %}
+        </dl>
+
+        <div class="mt-4 space-y-2 border-t border-white/[.07] pt-4">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-slate-400">Dribles</span>
+            <span class="tracking-widest text-amber-400">{{ ficha.skillmoves|estrelas }}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-slate-400">Pé ruim</span>
+            <span class="tracking-widest text-amber-400">{{ ficha.pe_ruim|estrelas }}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-slate-400">Reputação internacional</span>
+            <span class="tracking-widest text-amber-400">{{ ficha.rep_internacional|estrelas }}</span>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ======================= FICHA ======================= -->
+  <div class="min-w-0 space-y-6">
+
+    {% if not ficha %}
+      <div class="painel border-amber-500/25 bg-amber-500/[.06] px-6 py-8 text-center">
+        <p class="font-display text-xl font-bold text-amber-200">Ficha técnica ainda não sincronizada</p>
+        <p class="mx-auto mt-2 max-w-lg text-sm text-amber-100/70">
+          Este jogador está no acervo pela lista, mas a ficha detalhada
+          (atributos, radar) ainda não foi baixada. Ela chega numa próxima
+          rodada da sincronização de fichas.
+        </p>
+      </div>
+    {% else %}
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+      <div class="painel p-5">
+        <h2 class="mb-2 font-display text-lg font-bold uppercase tracking-wide text-white">Perfil geral</h2>
+        {% include "jogadores/partials/radar.html" with eixos=ficha.radar %}
+      </div>
+
+      <div class="painel p-5">
+        <h2 class="mb-4 font-display text-lg font-bold uppercase tracking-wide text-white">Resumo por área</h2>
+        <div class="space-y-3">
+          {% for eixo in ficha.radar %}
+            <div>
+              <div class="mb-1 flex items-baseline justify-between text-sm">
+                <span class="text-slate-300">{{ eixo.rotulo }}</span>
+                <span class="font-display text-lg font-bold {{ eixo.valor|cor_texto }}">{{ eixo.valor }}</span>
+              </div>
+              <div class="h-1.5 overflow-hidden rounded-full bg-white/[.07]">
+                <div class="h-full rounded-full {{ eixo.valor|cor_barra }}"
+                     style="width: {{ eixo.valor|percentual }}%"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if ficha.posicoes_jogaveis %}
+          <div class="mt-5 border-t border-white/[.07] pt-4">
+            <p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Posições jogáveis
+            </p>
+            <div class="flex flex-wrap gap-1.5">
+              {% for pos in ficha.posicoes_jogaveis %}
+                <span class="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1
+                             font-display text-xs font-bold tracking-wide text-emerald-300">{{ pos }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="painel p-5">
+      <h2 class="mb-5 font-display text-lg font-bold uppercase tracking-wide text-white">Atributos</h2>
+      <div class="grid gap-x-8 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
+        {% for grupo in ficha.grupos_atributos %}
+          <div>
+            <div class="mb-3 flex items-baseline justify-between border-b border-white/[.07] pb-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ grupo.titulo }}</h3>
+              <span class="font-display text-base font-bold {{ grupo.media|cor_texto }}">{{ grupo.media }}</span>
+            </div>
+            <ul class="space-y-2">
+              {% for item in grupo.itens %}
+                <li class="flex items-center gap-3 text-sm">
+                  <span class="flex-1 truncate text-slate-400">{{ item.rotulo }}</span>
+                  <span class="h-1.5 w-20 overflow-hidden rounded-full bg-white/[.07]">
+                    <span class="block h-full rounded-full {{ item.valor|cor_barra }}"
+                          style="width: {{ item.valor|percentual }}%"></span>
+                  </span>
+                  <span class="w-6 text-right font-display font-bold {{ item.valor|cor_texto }}">{{ item.valor }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      {% if ficha.especialidades %}
+        <div class="painel p-5">
+          <h2 class="mb-4 font-display text-lg font-bold uppercase tracking-wide text-white">Especialidades</h2>
+          <div class="flex flex-wrap gap-2">
+            {% for e in ficha.especialidades_rotuladas %}
+              <span class="rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1.5 text-xs font-semibold text-indigo-200">
+                {{ e }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if ficha.caracteristicas %}
+        <div class="painel p-5">
+          <h2 class="mb-4 font-display text-lg font-bold uppercase tracking-wide text-white">Características</h2>
+          <div class="flex flex-wrap gap-2">
+            {% for c in ficha.caracteristicas_rotuladas %}
+              <span class="rounded-lg border border-white/10 bg-white/[.05] px-2.5 py-1.5 text-xs font-medium text-slate-300">
+                {{ c }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if ficha.funcoes %}
+      <div class="painel p-5">
+        <h2 class="mb-4 font-display text-lg font-bold uppercase tracking-wide text-white">Funções táticas</h2>
+        <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {% for f in ficha.funcoes %}
+            <div class="flex items-center gap-3 rounded-xl border border-white/10 bg-night-900/50 px-3 py-2.5">
+              <span class="rounded-md border border-white/10 px-1.5 py-0.5 font-display text-xs font-bold text-slate-300">
+                {{ f.posicao|default:"—" }}
+              </span>
+              <span class="min-w-0 flex-1 truncate text-sm text-slate-200">{{ f.titulo|default:"—" }}</span>
+              <span class="font-display font-bold text-emerald-400">{{ f.familiaridade|default:"" }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% endif %}{# fim: tem ficha #}
+  </div>
+</div>

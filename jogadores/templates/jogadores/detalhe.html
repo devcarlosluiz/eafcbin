@@ -1,0 +1,19 @@
+{% extends "jogadores/base.html" %}
+
+{% block titulo %}{{ jogador.nome|default:"Jogador" }}{% endblock %}
+
+{% block conteudo %}
+<a href="{% url 'jogadores:consulta' %}{% if termo %}?q={{ termo|urlencode }}{% endif %}"
+   class="mb-5 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-300">
+  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+  Nova consulta
+</a>
+
+{% if erro %}
+  {% include "jogadores/partials/erro.html" %}
+{% else %}
+  {% include "jogadores/partials/ficha_completa.html" %}
+{% endif %}
+{% endblock %}

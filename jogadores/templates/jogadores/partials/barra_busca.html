@@ -1,0 +1,71 @@
+{% comment %}Barra única de consulta. GET puro — a URL é o estado da busca.{% endcomment %}
+<form method="get" action="{% url 'jogadores:consulta' %}" autocomplete="off" class="relative">
+  <div class="painel flex items-center gap-2 p-2 shadow-carta focus-within:border-emerald-500/40">
+    <svg class="ml-2 h-5 w-5 shrink-0 text-slate-500" fill="none" stroke="currentColor"
+         stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+    </svg>
+    <input type="search" name="q" id="consulta" value="{{ termo }}"
+           placeholder="Nome do jogador, país, posição — ou o ID"
+           class="w-full border-0 bg-transparent py-2.5 text-base text-slate-100
+                  placeholder:text-slate-500 focus:ring-0"
+           autofocus>
+    {% if termo %}
+      <a href="{% url 'jogadores:consulta' %}"
+         class="shrink-0 rounded-lg px-2 py-2 text-slate-500 hover:text-rose-300"
+         title="Limpar">✕</a>
+    {% endif %}
+    <button type="submit" class="btn-primario shrink-0">Consultar</button>
+  </div>
+
+  <div id="sugestoes"
+       class="absolute left-0 right-0 top-full z-50 mt-2 hidden overflow-hidden rounded-xl border border-white/10 bg-night-850 shadow-carta"></div>
+</form>
+
+<script>
+  // Autocomplete: só ativa se a API aceitar filtro no servidor (o endpoint
+  // responde `disponivel: false` quando a busca depende de varredura).
+  (function () {
+    const campo = document.getElementById('consulta');
+    const caixa = document.getElementById('sugestoes');
+    if (!campo || !caixa) return;
+    let timer = null;
+    let ligado = true;
+
+    const esconder = () => caixa.classList.add('hidden');
+
+    campo.addEventListener('input', function () {
+      clearTimeout(timer);
+      const termo = campo.value.trim();
+      if (!ligado || termo.length < 2 || /^\d+$/.test(termo)) return esconder();
+      timer = setTimeout(async function () {
+        try {
+          const resp = await fetch('{% url "jogadores:sugestoes" %}?q=' + encodeURIComponent(termo));
+          const dados = await resp.json();
+          if (dados.disponivel === false) { ligado = false; return esconder(); }
+          if (!dados.resultados.length) return esconder();
+          caixa.innerHTML = dados.resultados.map(function (j) {
+            const foto = j.foto
+              ? '<img src="' + j.foto + '" class="h-9 w-9 rounded-lg object-cover bg-night-800" alt="">'
+              : '<span class="h-9 w-9 rounded-lg bg-night-800"></span>';
+            return '<a href="/jogador/' + j.id + '/" class="flex items-center gap-3 px-3 py-2 hover:bg-white/5">'
+              + foto
+              + '<span class="min-w-0 flex-1"><span class="block truncate text-sm text-slate-100">' + j.nome + '</span>'
+              + '<span class="block truncate text-xs text-slate-500">'
+              + [j.posicao, j.nacionalidade].filter(Boolean).join(' · ') + '</span></span>'
+              + '<span class="font-display text-lg font-bold text-emerald-400">' + j.overall + '</span>'
+              + '</a>';
+          }).join('');
+          caixa.classList.remove('hidden');
+        } catch (e) { esconder(); }
+      }, 250);
+    });
+
+    document.addEventListener('click', function (ev) {
+      if (!caixa.contains(ev.target) && ev.target !== campo) esconder();
+    });
+    campo.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') esconder();
+    });
+  })();
+</script>

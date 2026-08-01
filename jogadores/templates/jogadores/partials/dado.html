@@ -1,0 +1,5 @@
+{% comment %}Par rótulo/valor. Espera: rotulo, valor, sufixo (opcional).{% endcomment %}
+<div>
+  <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{{ rotulo }}</dt>
+  <dd class="text-slate-200">{{ valor }}{% if valor != "—" %}{{ sufixo|default:"" }}{% endif %}</dd>
+</div>

@@ -1,0 +1,39 @@
+{% extends "jogadores/base.html" %}
+{% load painel %}
+
+{% block titulo %}{{ jogador.nome|default:"Jogador" }} · acervo{% endblock %}
+
+{% block conteudo %}
+<a href="{% url 'jogadores:players_local' %}"
+   class="mb-5 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-300">
+  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+  Voltar ao acervo
+</a>
+
+{% include "jogadores/partials/ficha_completa.html" %}
+
+{% if semelhantes %}
+  <div class="painel mt-6 p-5">
+    <h2 class="mb-4 font-display text-lg font-bold uppercase tracking-wide text-white">
+      Jogadores parecidos
+    </h2>
+    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {% for outro in semelhantes %}
+        <a href="{{ outro.url }}"
+           class="flex items-center gap-3 rounded-xl border border-white/10 bg-night-900/50 px-3 py-2.5 transition hover:border-emerald-500/40">
+          {% if outro.foto %}
+            <img src="{{ outro.foto }}" alt="" loading="lazy" class="h-9 w-9 rounded-lg bg-night-800 object-cover">
+          {% endif %}
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm text-slate-100">{{ outro.nome }}</span>
+            <span class="block truncate text-xs text-slate-500">{{ outro.posicao_nome }}</span>
+          </span>
+          <span class="font-display text-lg font-bold {{ outro.overall|cor_texto }}">{{ outro.overall }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

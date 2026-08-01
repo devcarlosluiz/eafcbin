@@ -1,0 +1,67 @@
+{% comment %}Barra de filtros do acervo. GET puro — a URL guarda o estado.{% endcomment %}
+<form method="get" action="{% url 'jogadores:players_local' %}" class="painel space-y-5 p-5">
+  <div class="flex items-center justify-between">
+    <h2 class="font-display text-lg font-bold uppercase tracking-wide text-white">Filtros</h2>
+    {% if chips %}
+      <a href="{% url 'jogadores:players_local' %}" class="text-xs font-semibold text-slate-400 hover:text-rose-300">limpar</a>
+    {% endif %}
+  </div>
+
+  <div>
+    <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-400" for="f-q">Busca</label>
+    <input id="f-q" type="search" name="q" value="{{ filtros.q }}"
+           placeholder="Nome, país…" class="campo py-2">
+  </div>
+
+  <div>
+    <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-400" for="f-pos">Posição</label>
+    <select id="f-pos" name="posicao" class="campo py-2">
+      <option value="">Todas</option>
+      {% for sigla, nome in posicoes %}
+        <option value="{{ sigla }}" {% if filtros.posicao == sigla %}selected{% endif %}>{{ sigla }} — {{ nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-400">Overall</label>
+    <div class="flex items-center gap-2">
+      <input type="number" name="overall_min" min="0" max="99" placeholder="mín"
+             value="{{ filtros.overall_min|default_if_none:'' }}" class="campo py-2">
+      <span class="text-slate-600">–</span>
+      <input type="number" name="overall_max" min="0" max="99" placeholder="máx"
+             value="{{ filtros.overall_max|default_if_none:'' }}" class="campo py-2">
+    </div>
+  </div>
+
+  <div>
+    <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-400" for="f-nac">Nacionalidade</label>
+    <select id="f-nac" name="nacionalidade" class="campo py-2">
+      <option value="">Todas</option>
+      {% for item in nacionalidades %}
+        <option value="{{ item.nacionalidade }}" {% if filtros.nacionalidade == item.nacionalidade %}selected{% endif %}>
+          {{ item.nacionalidade }} ({{ item.total }})
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-400">Situação</label>
+    <div class="grid grid-cols-2 gap-1.5">
+      {% for chave, rotulo in situacoes %}
+        <label class="cursor-pointer">
+          <input type="radio" name="situacao" value="{{ chave }}" class="peer sr-only"
+                 {% if filtros.situacao == chave %}checked{% endif %}>
+          <span class="block rounded-lg border border-white/10 px-2 py-2 text-center text-xs
+                       font-medium text-slate-400 transition hover:border-white/20
+                       peer-checked:border-emerald-500/60 peer-checked:bg-emerald-500/10
+                       peer-checked:text-emerald-300">{{ rotulo }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <input type="hidden" name="ordenar" value="{{ filtros.ordenar }}">
+  <button type="submit" class="btn-primario w-full">Aplicar</button>
+</form>

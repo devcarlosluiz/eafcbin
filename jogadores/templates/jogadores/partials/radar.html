@@ -1,0 +1,55 @@
+{% load painel l10n %}
+{% comment %}
+  Radar hexagonal em SVG puro — sem biblioteca externa. Espera: eixos.
+
+  `localize off`: sem isso, a locale pt-BR renderiza as coordenadas com vírgula
+  decimal (x="110,0"), que é SVG inválido — o navegador só lê a parte inteira.
+{% endcomment %}
+{% localize off %}
+{% radar_grade 4 100 110 6 as aneis %}
+{% radar_eixos 100 110 6 as linhas %}
+{% radar_rotulos eixos 100 110 26 as marcadores %}
+
+{% comment %}
+  Os rótulos ficam a raio 126 do centro (110): alcançam de ~-24 a ~252 nos dois
+  eixos. O viewBox inclui essa margem para as siglas das pontas não serem
+  cortadas pela moldura do card (antes era "0 0 220 220", justo demais).
+{% endcomment %}
+<svg viewBox="-24 -26 268 288" class="mx-auto w-full max-w-[300px]" role="img"
+     aria-label="Gráfico de atributos gerais">
+  <!-- anéis -->
+  {% for anel in aneis %}
+    <polygon points="{{ anel }}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+  {% endfor %}
+
+  <!-- eixos -->
+  {% for linha in linhas %}
+    <line x1="{{ linha.cx }}" y1="{{ linha.cy }}" x2="{{ linha.x }}" y2="{{ linha.y }}"
+          stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+  {% endfor %}
+
+  <!-- área do jogador -->
+  <polygon points="{% radar_pontos eixos 100 110 99 %}"
+           fill="rgba(16,185,129,.22)" stroke="#34d399" stroke-width="2"
+           stroke-linejoin="round"/>
+
+  <!-- vértices -->
+  {% for marcador in marcadores %}
+    <circle cx="{{ marcador.x }}" cy="{{ marcador.y }}" r="0" fill="none"/>
+  {% endfor %}
+
+  <!-- rótulos -->
+  {% for marcador in marcadores %}
+    <text x="{{ marcador.x }}" y="{{ marcador.y }}" text-anchor="middle"
+          dominant-baseline="middle" class="fill-slate-400"
+          style="font-size:9px;font-weight:700;letter-spacing:.08em">
+      {{ marcador.sigla }}
+    </text>
+    <text x="{{ marcador.x }}" y="{{ marcador.y }}" dy="11" text-anchor="middle"
+          dominant-baseline="middle" class="fill-emerald-400"
+          style="font-size:11px;font-weight:800">
+      {{ marcador.valor }}
+    </text>
+  {% endfor %}
+</svg>
+{% endlocalize %}

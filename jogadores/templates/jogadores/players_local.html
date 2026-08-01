@@ -1,0 +1,108 @@
+{% extends "jogadores/base.html" %}
+{% load painel humanize %}
+
+{% block titulo %}Acervo local{% endblock %}
+
+{% block conteudo %}
+{% if base_vazia %}
+  <div class="painel mx-auto max-w-2xl px-8 py-14 text-center">
+    <h1 class="font-display text-3xl font-bold uppercase tracking-wide text-white">Acervo vazio</h1>
+    <p class="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-400">
+      Este painel lê do banco local, alimentado pela sincronização. Rode uma vez
+      para popular:
+    </p>
+    <code class="mt-5 block rounded-xl border border-white/10 bg-night-900/60 p-4 text-sm text-emerald-300">
+      docker compose run --rm painel python manage.py sincronizar_jogadores
+    </code>
+    <p class="mt-4 text-xs text-slate-500">
+      Ou espere a rodada agendada. Enquanto isso, o
+      <a href="{% url 'jogadores:consulta' %}" class="text-emerald-400 hover:text-emerald-300">painel ao vivo</a>
+      já funciona.
+    </p>
+  </div>
+{% else %}
+
+<div class="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+
+  <!-- ===== FILTROS ===== -->
+  <aside class="lg:sticky lg:top-6 lg:self-start">
+    {% include "jogadores/partials/filtros_local.html" %}
+  </aside>
+
+  <!-- ===== RESULTADOS ===== -->
+  <section class="min-w-0 space-y-5">
+
+    <div class="grid grid-cols-3 gap-3">
+      <div class="painel px-4 py-3">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">No acervo</p>
+        <p class="mt-1 font-display text-2xl font-bold text-emerald-400">{{ resumo.total|intcomma }}</p>
+      </div>
+      <div class="painel px-4 py-3">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Overall médio</p>
+        <p class="mt-1 font-display text-2xl font-bold text-slate-100">{{ resumo.media|floatformat:1|default:"—" }}</p>
+      </div>
+      <div class="painel px-4 py-3">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Melhor</p>
+        <p class="mt-1 font-display text-2xl font-bold text-slate-100">{{ resumo.melhor|default:"—" }}</p>
+      </div>
+    </div>
+
+    <div class="painel flex flex-wrap items-center gap-3 px-4 py-3">
+      <p class="text-sm text-slate-400">
+        <strong class="text-slate-100">{{ pagina.paginator.count|intcomma }}</strong>
+        jogador{{ pagina.paginator.count|pluralize:"es" }}
+        {% if pagina.paginator.num_pages > 1 %}
+          · página {{ pagina.number }} de {{ pagina.paginator.num_pages|intcomma }}
+        {% endif %}
+      </p>
+      <div class="ml-auto flex items-center gap-2">
+        <label for="ordenar" class="text-xs uppercase tracking-wider text-slate-500">Ordenar</label>
+        <select id="ordenar" class="campo w-auto py-1.5 text-xs"
+                onchange="location.href=this.value">
+          {% for chave, rotulo in ordenacoes %}
+            <option value="?{% if querystring %}{{ querystring }}&{% endif %}ordenar={{ chave }}"
+                    {% if filtros.ordenar == chave %}selected{% endif %}>{{ rotulo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {% if chips %}
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs uppercase tracking-wider text-slate-500">Filtros:</span>
+        {% for chip in chips %}
+          <span class="selo border border-white/10 bg-white/[.05] !normal-case text-slate-300">
+            <span class="text-slate-500">{{ chip.rotulo }}</span> {{ chip.valor }}
+          </span>
+        {% endfor %}
+        <a href="{% url 'jogadores:players_local' %}" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300">
+          limpar tudo
+        </a>
+      </div>
+    {% endif %}
+
+    {% if pagina.object_list %}
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for jogador in pagina.object_list %}
+          {% include "jogadores/partials/card_jogador.html" %}
+        {% endfor %}
+      </div>
+      {% include "jogadores/partials/paginacao_local.html" %}
+    {% else %}
+      <div class="painel px-6 py-16 text-center">
+        <p class="font-display text-2xl font-bold text-slate-300">Nenhum jogador encontrado</p>
+        <p class="mt-2 text-sm text-slate-500">Afrouxe os filtros ou limpe a busca.</p>
+        <a href="{% url 'jogadores:players_local' %}" class="btn-primario mt-6">Limpar filtros</a>
+      </div>
+    {% endif %}
+
+    {% if ultima_sync.terminada_em %}
+      <p class="text-center text-xs text-slate-600">
+        Última sincronização: {{ ultima_sync.terminada_em|date:"d/m/Y H:i" }}
+        · {{ ultima_sync.paginas }} páginas
+      </p>
+    {% endif %}
+  </section>
+</div>
+{% endif %}
+{% endblock %}

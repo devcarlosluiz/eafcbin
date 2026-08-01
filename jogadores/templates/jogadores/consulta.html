@@ -1,0 +1,75 @@
+{% extends "jogadores/base.html" %}
+{% load painel humanize %}
+
+{% block titulo %}{% if termo %}{{ termo }}{% else %}Consulta{% endif %}{% endblock %}
+
+{% block conteudo %}
+
+<div class="mx-auto max-w-3xl">
+  {% include "jogadores/partials/barra_busca.html" %}
+</div>
+
+{% if erro %}
+  {% include "jogadores/partials/erro.html" %}
+
+{% elif resultado %}
+  <div class="mt-8">
+
+    {# ---------- cabeçalho do resultado ---------- #}
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      {% if resultado.modo == "listagem" %}
+        <p class="text-sm text-slate-400">
+          Mostrando <strong class="text-slate-100">{{ resultado.pagina.jogadores|length }}</strong>
+          de <strong class="text-slate-100">{{ resultado.pagina.total|intcomma }}</strong> jogadores
+          · página {{ resultado.pagina.numero }} de {{ resultado.pagina.ultima|intcomma }}
+        </p>
+
+      {% elif resultado.modo == "servidor" %}
+        <p class="text-sm text-slate-400">
+          <strong class="text-slate-100">{{ resultado.pagina.total|intcomma }}</strong>
+          resultado{{ resultado.pagina.total|pluralize:"s" }} para
+          <strong class="text-emerald-300">“{{ termo }}”</strong>
+          {% if resultado.pagina.ultima > 1 %}
+            · página {{ resultado.pagina.numero }} de {{ resultado.pagina.ultima }}
+          {% endif %}
+        </p>
+
+      {% elif resultado.modo == "varredura" %}
+        <p class="text-sm text-slate-400">
+          <strong class="text-slate-100">{{ resultado.jogadores|length }}</strong>
+          encontrado{{ resultado.jogadores|length|pluralize:"s" }} para
+          <strong class="text-emerald-300">“{{ termo }}”</strong>
+          nas páginas {{ resultado.primeira_pagina }}–{{ resultado.ultima_lida }}
+          de {{ resultado.total_paginas|intcomma }}
+        </p>
+      {% endif %}
+    </div>
+
+    {# ---------- aviso da varredura ---------- #}
+    {% if resultado.modo == "varredura" %}
+      {% include "jogadores/partials/aviso_varredura.html" %}
+    {% endif %}
+
+    {# ---------- resultados ---------- #}
+    {% if resultado.jogadores %}
+      {# 16 por página fecha uma grade 4×4 nas telas largas. #}
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {% for jogador in resultado.jogadores %}
+          {% include "jogadores/partials/card_jogador.html" %}
+        {% endfor %}
+      </div>
+    {% elif resultado.modo != "varredura" %}
+      <div class="painel px-6 py-16 text-center">
+        <p class="font-display text-2xl font-bold text-slate-300">Nenhum jogador encontrado</p>
+        <p class="mt-2 text-sm text-slate-500">Tente outro termo, ou consulte pelo ID do jogador.</p>
+      </div>
+    {% endif %}
+
+    {# ---------- navegação ---------- #}
+    {% if resultado.pagina and resultado.pagina.ultima > 1 %}
+      {% include "jogadores/partials/paginacao.html" with pagina=resultado.pagina %}
+    {% endif %}
+  </div>
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,28 @@
+# Segredos e estado local — nunca entram na imagem.
+.env
+.arena_cookies.txt
+db.sqlite3
+db.sqlite3-journal
+dados/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Build/estáticos gerados dentro da imagem
+staticfiles/
+media/
+
+# Docker / VCS / editores
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose*.yml
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

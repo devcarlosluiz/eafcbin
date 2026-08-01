@@ -1,0 +1,44 @@
+# Dois processos sobre a mesma imagem:
+#   painel → consulta ao vivo na API (não lê o banco)
+#   cron   → agendador diário que mantém o acervo no banco
+x-comum: &comum
+  build: .
+  image: jogadores-fc26
+  restart: unless-stopped
+  env_file:
+    # Opcional para subir: sem credenciais o painel abre e explica o que falta.
+    - path: .env
+      required: false
+  environment:
+    # Sobrepõem o .env: no contêiner quem serve os estáticos é o WhiteNoise,
+    # então DEBUG fica desligado.
+    DJANGO_DEBUG: "False"
+    DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0"
+    DJANGO_DATA_DIR: /app/dados
+  volumes:
+    # Banco do acervo (SQLite) + cookie da sessão da API.
+    - dados:/app/dados
+
+services:
+  painel:
+    <<: *comum
+    container_name: jogadores-fc26
+    ports:
+      - "8000:8000"
+
+  cron:
+    <<: *comum
+    container_name: jogadores-fc26-cron
+    depends_on:
+      # Espera o painel ficar saudável para que só um processo aplique as
+      # migrações — os dois de uma vez brigam pelo banco recém-criado.
+      painel:
+        condition: service_healthy
+    # Dorme até o horário (SYNC_HORARIO), sincroniza, volta a dormir.
+    command: python manage.py agendar_sincronizacao
+    # Não expõe porta — o healthcheck HTTP da imagem não se aplica aqui.
+    healthcheck:
+      disable: true
+
+volumes:
+  dados:

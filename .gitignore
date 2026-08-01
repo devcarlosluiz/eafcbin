@@ -1,0 +1,23 @@
+# Segredos e sessão
+.env
+.arena_cookies.txt
+
+# Estado local (só o cookie da sessão da API — o projeto não tem banco)
+dados/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Django
+staticfiles/
+media/
+
+# Editores / SO
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

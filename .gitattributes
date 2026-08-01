@@ -1,0 +1,4 @@
+# O entrypoint roda em Linux: precisa de LF mesmo quando editado no Windows.
+*.sh text eol=lf
+Dockerfile text eol=lf
+docker-entrypoint.sh text eol=lf

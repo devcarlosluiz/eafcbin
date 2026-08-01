@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Consulta de Jogadores{% endblock %} · FC26</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            night: {
+              900: '#070b16',
+              850: '#0b1020',
+              800: '#111827',
+              750: '#151d31',
+              700: '#1c2740',
+              600: '#243050'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['"Barlow Condensed"', 'Inter', 'sans-serif']
+          },
+          boxShadow: {
+            carta: '0 18px 40px -18px rgba(0,0,0,.75)'
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      body { @apply bg-[#070b16] text-slate-200 antialiased; }
+      ::selection { @apply bg-emerald-500/30; }
+      * { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+      *::-webkit-scrollbar { width: 9px; height: 9px; }
+      *::-webkit-scrollbar-thumb { @apply bg-slate-700 rounded-full; }
+      *::-webkit-scrollbar-thumb:hover { @apply bg-slate-600; }
+    }
+    @layer components {
+      .painel { @apply rounded-2xl border border-white/[.07] bg-white/[.03] backdrop-blur; }
+      .campo {
+        @apply w-full rounded-lg border-white/10 bg-night-900/70 text-sm text-slate-100
+               placeholder:text-slate-500 focus:border-emerald-500/60 focus:ring-2
+               focus:ring-emerald-500/20 transition;
+      }
+      .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5
+               text-sm font-semibold transition focus:outline-none focus:ring-2
+               focus:ring-emerald-500/40;
+      }
+      .btn-primario { @apply btn bg-emerald-500 text-night-900 hover:bg-emerald-400; }
+      .btn-neutro {
+        @apply btn border border-white/10 bg-white/[.04] text-slate-200 hover:bg-white/[.08];
+      }
+      .selo {
+        @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px]
+               font-semibold uppercase tracking-wide;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-full font-sans">
+
+  <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div class="absolute -top-40 left-1/4 h-96 w-96 rounded-full bg-emerald-600/10 blur-3xl"></div>
+    <div class="absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-indigo-600/10 blur-3xl"></div>
+  </div>
+
+  <header class="border-b border-white/[.07]">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6">
+      <a href="{% url 'jogadores:consulta' %}" class="flex items-center gap-3">
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 font-display text-lg font-bold text-night-900">
+          26
+        </span>
+        <span class="leading-tight">
+          <span class="block font-display text-xl font-bold uppercase tracking-wide text-white">
+            Jogadores
+          </span>
+          <span class="block text-[11px] uppercase tracking-[.2em] text-slate-500">
+            Arena Virtual · FC26
+          </span>
+        </span>
+      </a>
+
+      {% comment %}`aba` é definido por cada tela: "vivo" ou "local".{% endcomment %}
+      <nav class="ml-auto flex items-center gap-1 rounded-xl border border-white/10 bg-white/[.03] p-1">
+        <a href="{% url 'jogadores:consulta' %}"
+           class="rounded-lg px-3 py-1.5 text-xs font-semibold transition
+                  {% if aba == 'vivo' %}bg-emerald-500 text-night-900{% else %}text-slate-300 hover:bg-white/[.06]{% endif %}">
+          Ao vivo
+        </a>
+        <a href="{% url 'jogadores:players_local' %}"
+           class="rounded-lg px-3 py-1.5 text-xs font-semibold transition
+                  {% if aba == 'local' %}bg-emerald-500 text-night-900{% else %}text-slate-300 hover:bg-white/[.06]{% endif %}">
+          Acervo local
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="mt-12 border-t border-white/[.07] py-6">
+    <div class="mx-auto max-w-7xl px-4 text-xs leading-relaxed text-slate-500 sm:px-6">
+      <p>Consulta em tempo real à API interna do painel Arena Virtual — nada é gravado em banco.</p>
+      <p>Uso restrito à conta autorizada; não redistribua os dados.</p>
+    </div>
+  </footer>
+
+  {% block rodape_scripts %}{% endblock %}
+</body>
+</html>
