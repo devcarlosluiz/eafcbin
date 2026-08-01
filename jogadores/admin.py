@@ -22,12 +22,12 @@ class AlteracaoInline(admin.TabularInline):
 
 @admin.register(Jogador)
 class JogadorAdmin(admin.ModelAdmin):
-    list_display = ("miniatura", "nome", "overall", "posicao", "nome_escudo",
-                    "nacionalidade", "passe", "alterado_em", "verificado_em")
+    list_display = ("miniatura", "nome", "overall", "posicao",
+                    "nacionalidade", "alterado_em", "verificado_em")
     list_display_links = ("miniatura", "nome")
     list_filter = ("posicao", "a_venda", "in_leilao", "meu_jogador", "favorito",
                    "bola_nome", "nacionalidade", "ausente_desde")
-    search_fields = ("nome", "nome_api", "nome_escudo", "nacionalidade", "pk")
+    search_fields = ("nome", "nome_api", "nacionalidade", "pk")
     ordering = ("-overall",)
     list_per_page = 50
     inlines = [FichaInline, AlteracaoInline]

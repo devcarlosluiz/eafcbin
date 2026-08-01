@@ -71,7 +71,8 @@ O serviço `cron` do Compose roda o agendador: dorme até `SYNC_HORARIO`
 Cada rodada faz duas coisas:
 
 1. **Lista completa** — varre as 1.942 páginas (~40 min) e atualiza todos os
-   jogadores. É daqui que vêm valor de mercado, multa, dono, à venda, leilão.
+   jogadores. É daqui que vêm multa, dono, à venda, leilão. Time da liga e
+   valor de mercado não são gravados no acervo, de propósito.
 2. **Fichas técnicas** — dentro de um orçamento de tempo
    (`SYNC_MINUTOS_DETALHES`, padrão 120 min). A ficha é **1 requisição por
    jogador**: os 19.415 levariam ~6,5 h, então elas rodam em **rodízio** — quem
@@ -83,7 +84,7 @@ Cada rodada faz duas coisas:
 A sincronização compara campo a campo com o que está no banco. Sem diferença,
 nada é reescrito. Com diferença, o campo é atualizado, `alterado_em` avança e a
 mudança vira uma linha em `Alteracao` (`de`, `para`, `quando`) — dá para
-responder "quanto o passe do Mbappé variou este mês" olhando só o histórico.
+responder "quando o Mbappé entrou em leilão" olhando só o histórico.
 
 Quem some da listagem **não é apagado**: ganha `ausente_desde`, e o carimbo é
 limpo se voltar a aparecer.
@@ -111,9 +112,10 @@ nada. Cada rodada vira um registro em `Execucao`, visível no `/admin`.
 
 ### Onde os dados ficam
 
-SQLite em `/app/dados/jogadores.sqlite3` (volume `dados`), com WAL ligado para o
-agendador escrever sem travar leituras. Para usar outro banco, defina
-`DATABASE_URL` no `.env`:
+Postgres, no serviço `db` do Compose (volume `db_dados`). `painel` e `cron`
+recebem a `DATABASE_URL` já montada a partir de `POSTGRES_DB`/`POSTGRES_USER`/
+`POSTGRES_PASSWORD` no `.env`. Para apontar para outro Postgres (fora do
+Compose), defina `DATABASE_URL` diretamente:
 
 ```
 DATABASE_URL=postgres://usuario:senha@host:5432/jogadores
@@ -139,28 +141,32 @@ cp .env.example .env      # Windows: copy .env.example .env
 docker compose up -d --build
 ```
 
-Sobem dois contêineres: `painel` (web, porta 8000) e `cron` (agendador). Abra
-<http://127.0.0.1:8000/>. Sem credenciais o painel sobe e explica na tela o que
-falta — preencha `ARENA_LOGIN` e `ARENA_SENHA` no `.env` e rode
-`docker compose up -d` de novo.
+Sobem três contêineres: `db` (Postgres), `painel` (web, porta 8000) e `cron`
+(agendador). Abra <http://127.0.0.1:8000/>. Sem credenciais o painel sobe e
+explica na tela o que falta — preencha `ARENA_LOGIN` e `ARENA_SENHA` no `.env`
+e rode `docker compose up -d` de novo.
 
 ```bash
 docker compose logs -f painel
 docker compose logs -f cron
-docker compose up -d painel      # só o painel, sem o agendador
-docker compose down              # o volume `dados` (banco) permanece
+docker compose up -d painel      # só o painel, sem o agendador (o `db` sobe junto)
+docker compose down              # o volume `db_dados` (banco) permanece
 docker compose down -v           # apaga o banco também
 ```
 
-O `cron` espera o `painel` ficar saudável antes de subir: assim só um processo
-aplica as migrações no banco recém-criado.
+`painel` e `cron` esperam o `db` ficar saudável antes de subir; o `cron` ainda
+espera o `painel` ficar saudável, para que só um processo aplique as migrações
+no banco recém-criado.
 
 O contêiner roda **um worker com threads**, de propósito: o intervalo entre
 chamadas, a sessão autenticada e o cache são estado de processo — vários workers
-teriam cada um o seu e furariam o rate limit da API. O volume `dados` guarda o
-banco do acervo e o cookie de login, que evita relogar a cada `up`.
+teriam cada um o seu e furariam o rate limit da API. O volume `dados` guarda só
+o cookie de login (evita relogar a cada `up`); o acervo vive no `db_dados`.
 
 ## Rodando sem Docker
+
+Precisa de um Postgres acessível (ex.: `docker compose up -d db`, que expõe a
+porta 5432) e `DATABASE_URL` apontando para ele no `.env`.
 
 ```bash
 pip install -r requirements.txt
@@ -181,7 +187,7 @@ python manage.py agendar_sincronizacao
 
 ```
 Dockerfile                  gunicorn (1 worker + threads) + whitenoise
-docker-compose.yml          serviços `painel` e `cron` + volume `dados`
+docker-compose.yml          serviços `db` (Postgres), `painel` e `cron`
 config/settings.py          banco, cache, config da API e do agendador
 jogadores/
   data/fifa_labels.py       rótulos pt-BR das flags C*/E*, grupos de atributos
@@ -206,9 +212,11 @@ jogadores/
 ### Detalhes que importam
 
 - **`nome`** vem como `"(26) K. Mbappé"` — o parser separa nome e idade.
-- **`passe`** e **`valor_a_venda`** vêm no formato BR (`"475.200,00"`).
-- **`nome_escudo`** é o clube dentro da liga; **`time`** (só no detalhe) é o
-  clube da vida real. São campos diferentes.
+- **`passe`** e **`valor_a_venda`** vêm no formato BR (`"475.200,00"`). `passe`
+  (valor de mercado) só existe no painel ao vivo — o acervo não grava.
+- **`nome_escudo`** é o clube dentro da liga (também só ao vivo, não vai para o
+  acervo); **`time`** (só no detalhe) é o clube da vida real e continua sendo
+  gravado. São campos diferentes.
 - Flags `C*`/`E*` são varridas por regex, não por intervalo fixo: se o site
   passar a mandar códigos novos, eles aparecem com o próprio código em vez de
   sumirem.
@@ -237,6 +245,10 @@ quebram a tela: aparecem como o próprio código.
 
 ## Testes
 
+Precisa de um Postgres acessível via `DATABASE_URL` (ex.: `docker compose up -d
+db`) — o Django cria e derruba um banco de teste (`test_<nome>`) na mesma
+conexão a cada rodada.
+
 ```bash
 python manage.py test jogadores
 ```
@@ -259,7 +271,8 @@ rodízio das fichas e o cálculo do próximo disparo do agendador.
 | `ARENA_PAGINAS_POR_VARREDURA` | `15` | Páginas por lote na varredura |
 | `ARENA_LIMITE_VARREDURA` | `300` | Teto de páginas numa mesma busca |
 | `CACHE_TTL` | `600` | Segundos que uma página/ficha fica em cache |
-| `DATABASE_URL` | *(SQLite)* | Banco do acervo |
+| `DATABASE_URL` | — | Banco do acervo (Postgres), obrigatório |
+| `POSTGRES_DB` / `_USER` / `_PASSWORD` | `jogadores` | Credenciais do contêiner `db` do Compose |
 | `SYNC_HORARIO` | `03:30` | Horário da rodada diária |
 | `SYNC_MINUTOS_DETALHES` | `120` | Orçamento das fichas por rodada (0 desliga) |
 | `SYNC_AO_INICIAR` | `False` | Sincronizar assim que o agendador sobe |

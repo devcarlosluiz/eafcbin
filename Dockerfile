@@ -10,8 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Dependências primeiro: só reinstala quando os requirements mudam.
-COPY requirements.txt requirements-docker.txt ./
-RUN pip install --no-cache-dir -r requirements-docker.txt
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
@@ -23,8 +23,10 @@ RUN useradd --create-home --uid 1000 painel \
 USER painel
 
 # `collectstatic` roda no build para o WhiteNoise ter o manifesto pronto.
-# SECRET_KEY é só para satisfazer o settings aqui — em runtime vem do .env.
+# SECRET_KEY e DATABASE_URL são só para satisfazer o settings aqui — não chega
+# a conectar no banco; em runtime os valores reais vêm do .env.
 RUN DJANGO_SECRET_KEY=build DJANGO_DATA_DIR=/tmp \
+    DATABASE_URL=postgres://build:build@localhost:5432/build \
     python manage.py collectstatic --noinput --clear
 
 EXPOSE 8000

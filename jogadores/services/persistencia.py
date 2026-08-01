@@ -55,13 +55,12 @@ def campos_da_lista(item: dict) -> dict:
         "busca_norm": normalizar(f"{nome} {nacionalidade} {posicao}")[:400],
         "overall": inteiro(item.get("overall")),
         "posicao": posicao,
-        "passe": valor_br(item.get("passe")),
         "multa": inteiro(item.get("multa")),
         "nacionalidade": nacionalidade,
         "nacionalidade_flag": (item.get("nacionalidade_flag") or "")[:500],
         "foto": (item.get("foto") or "")[:500],
-        "nome_escudo": (item.get("nome_escudo") or "")[:180],
-        "link_escudo": (item.get("link_escudo") or "")[:500],
+        # time da liga (nome_escudo/link_escudo) e valor de mercado (passe) não
+        # entram no acervo, de propósito.
         "usuario_id": item.get("usuario_id") or None,
         "usuario_id_emprestimo": item.get("usuario_id_emprestimo") or None,
         "nome_escudo_emprestimo": (item.get("nome_escudo_emprestimo") or "")[:180],

@@ -1,4 +1,5 @@
-# Dois processos sobre a mesma imagem:
+# Três serviços sobre a mesma imagem + um banco:
+#   db     → Postgres, guarda o acervo
 #   painel → consulta ao vivo na API (não lê o banco)
 #   cron   → agendador diário que mantém o acervo no banco
 x-comum: &comum
@@ -11,15 +12,42 @@ x-comum: &comum
       required: false
   environment:
     # Sobrepõem o .env: no contêiner quem serve os estáticos é o WhiteNoise,
-    # então DEBUG fica desligado.
+    # então DEBUG fica desligado. DJANGO_ALLOWED_HOSTS continua vindo do .env
+    # (adicione lá o domínio/IP público) — aqui só garante um padrão local.
     DJANGO_DEBUG: "False"
-    DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0"
+    DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}"
     DJANGO_DATA_DIR: /app/dados
+    # Sempre aponta para o serviço `db` deste Compose — ignora qualquer
+    # DATABASE_URL que venha do .env (esse é só para rodar fora do Docker).
+    DATABASE_URL: "postgres://${POSTGRES_USER:-jogadores}:${POSTGRES_PASSWORD:-jogadores}@db:5432/${POSTGRES_DB:-jogadores}"
   volumes:
-    # Banco do acervo (SQLite) + cookie da sessão da API.
+    # Só o cookie da sessão da API — o banco agora vive no volume do `db`.
     - dados:/app/dados
+  depends_on:
+    db:
+      condition: service_healthy
 
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: jogadores-fc26-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jogadores}
+      POSTGRES_USER: ${POSTGRES_USER:-jogadores}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jogadores}
+    volumes:
+      - db_dados:/var/lib/postgresql/data
+    ports:
+      # Exposto para inspecionar com um cliente local; não precisa se só os
+      # contêineres acessarem o banco.
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jogadores} -d ${POSTGRES_DB:-jogadores}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   painel:
     <<: *comum
     container_name: jogadores-fc26
@@ -30,6 +58,8 @@ services:
     <<: *comum
     container_name: jogadores-fc26-cron
     depends_on:
+      db:
+        condition: service_healthy
       # Espera o painel ficar saudável para que só um processo aplique as
       # migrações — os dois de uma vez brigam pelo banco recém-criado.
       painel:
@@ -42,3 +72,4 @@ services:
 
 volumes:
   dados:
+  db_dados:

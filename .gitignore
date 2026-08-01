@@ -2,7 +2,7 @@
 .env
 .arena_cookies.txt
 
-# Estado local (só o cookie da sessão da API — o projeto não tem banco)
+# Estado local (só o cookie da sessão da API — o banco é Postgres, à parte)
 dados/
 
 # Python

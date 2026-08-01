@@ -104,18 +104,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 # ---------------------------------------------------------------------------
-# Banco do acervo
+# Banco do acervo (Postgres)
 # ---------------------------------------------------------------------------
 def _banco_de_url(url: str) -> dict:
-    """Traduz uma URL de conexão. Suporta sqlite, postgres e mysql."""
+    """Traduz uma URL de conexão. Suporta postgres e mysql."""
     partes = urlparse(url)
     esquema = partes.scheme.replace("postgresql", "postgres")
-    if esquema == "sqlite":
-        return {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": partes.path or str(DADOS_DIR / "jogadores.sqlite3"),
-            "OPTIONS": {"timeout": 60},
-        }
     motores = {
         "postgres": "django.db.backends.postgresql",
         "mysql": "django.db.backends.mysql",
@@ -134,18 +128,12 @@ def _banco_de_url(url: str) -> dict:
 
 
 _URL_BANCO = env("DATABASE_URL", "")
-if _URL_BANCO:
-    DATABASES = {"default": _banco_de_url(_URL_BANCO)}
-else:
-    # SQLite no diretório de dados. WAL deixa o agendador escrever enquanto
-    # outra conexão lê, sem travar.
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": DADOS_DIR / "jogadores.sqlite3",
-            "OPTIONS": {"timeout": 60, "init_command": "PRAGMA journal_mode=WAL;"},
-        }
-    }
+if not _URL_BANCO:
+    raise RuntimeError(
+        "DATABASE_URL não definida. Configure um Postgres, ex.: "
+        "postgres://usuario:senha@host:5432/nome"
+    )
+DATABASES = {"default": _banco_de_url(_URL_BANCO)}
 
 #: Cache em memória do processo. Guarda páginas e fichas já buscadas por alguns
 #: minutos, para que paginar de volta não gaste requisições do rate limit.
