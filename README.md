@@ -7,12 +7,14 @@ Duas camadas independentes sobre a API interna do painel Arena Virtual
 |---|---|---|
 | `/` | Barra de consulta que renderiza os jogadores na hora | API, ao vivo |
 | `/players/local/` | Mesmo visual, porém lendo o acervo (instantâneo) | Banco |
+| `/api/v1/jogadores/` | API JSON para consumo externo (painel de campeonatos) | Banco |
 | — | Acervo: banco com todos os jogadores, atualizado todo dia | Sincronização agendada |
 
 O painel `/` **não usa o banco** — vai direto à API a cada busca. O acervo é uma
 cópia local completa, alimentada pelo agendador; `/players/local/` navega esse
 acervo com busca e filtros instantâneos (sem rate limit). O cabeçalho tem um
-alternador **Ao vivo / Acervo local** entre os dois.
+alternador **Ao vivo / Acervo local** entre os dois. A API em `/api/v1/` expõe
+esse mesmo acervo em JSON para outros sistemas (ver [api_externa.MD](api_externa.MD)).
 
 ---
 
@@ -207,6 +209,11 @@ jogadores/
   management/commands/      sincronizar_jogadores, sincronizar_detalhes,
                             agendar_sincronizacao, descobrir_flags
   tests.py, tests_acervo.py
+  --- api externa (painel de campeonatos, ver api_externa.MD) ---
+  api/permissions.py        chave fixa por header (X-API-Key)
+  api/serializers.py        jogador + ficha técnica, todos os campos
+  api/views.py, urls.py     GET /api/v1/jogadores/ e /api/v1/jogadores/{id}/
+  api/tests.py
 ```
 
 ### Detalhes que importam

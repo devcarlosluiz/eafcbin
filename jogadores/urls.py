@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import views, views_local
 
@@ -15,4 +15,7 @@ urlpatterns = [
     path("players/local/", views_local.players_local, name="players_local"),
     path("players/local/<int:pk>/", views_local.players_local_detalhe,
          name="players_local_detalhe"),
+
+    # API externa (painel de campeonatos) — ver jogadores/api/
+    path("api/v1/", include("jogadores.api.urls")),
 ]

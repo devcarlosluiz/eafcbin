@@ -10,6 +10,8 @@ modelados em coluna.
 
 from __future__ import annotations
 
+import secrets
+
 from django.db import models
 
 from .data import fifa_labels
@@ -295,3 +297,33 @@ class Execucao(models.Model):
         if not self.terminada_em:
             return 0.0
         return round((self.terminada_em - self.iniciada_em).total_seconds() / 60, 1)
+
+
+class ChaveApiExterna(models.Model):
+    """Uma chave de acesso à API externa (`/api/v1/`), administrada pelo admin.
+
+    Um painel de campeonatos por chave: dá para identificar quem está usando
+    e revogar o acesso de um consumidor sem afetar os demais, só excluindo
+    (ou desativando) a chave dele.
+    """
+
+    nome = models.CharField(
+        "nome", max_length=120,
+        help_text="Quem usa esta chave — ex.: \"Painel de Campeonatos X\".",
+    )
+    token = models.CharField("token", max_length=64, unique=True, blank=True, editable=False)
+    ativa = models.BooleanField("ativa", default=True)
+    criada_em = models.DateTimeField("criada em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "chave de API externa"
+        verbose_name_plural = "chaves de API externa"
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return self.nome
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)

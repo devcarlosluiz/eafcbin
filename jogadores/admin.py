@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Alteracao, Execucao, Jogador, JogadorDetalhe
+from .models import Alteracao, ChaveApiExterna, Execucao, Jogador, JogadorDetalhe
 
 
 class FichaInline(admin.StackedInline):
@@ -62,3 +62,13 @@ class ExecucaoAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+@admin.register(ChaveApiExterna)
+class ChaveApiExternaAdmin(admin.ModelAdmin):
+    """Chaves da API externa (`/api/v1/`) — um painel de campeonatos por chave."""
+
+    list_display = ("nome", "token", "ativa", "criada_em")
+    list_filter = ("ativa",)
+    search_fields = ("nome",)
+    readonly_fields = ("token", "criada_em")

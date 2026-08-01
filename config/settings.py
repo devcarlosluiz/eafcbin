@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "rest_framework",
     "jogadores",
 ]
 
@@ -210,6 +211,19 @@ SINCRONIZACAO = {
     "MINUTOS_DETALHES": env_int("SYNC_MINUTOS_DETALHES", 120),
     # Rodar uma sincronização assim que o agendador sobe, sem esperar o horário.
     "AO_INICIAR": env_bool("SYNC_AO_INICIAR", False),
+}
+
+# ---------------------------------------------------------------------------
+# API externa do acervo (painel de campeonatos — ver jogadores/api/)
+# ---------------------------------------------------------------------------
+#: Chaves aceitas no header `X-API-Key` — cadastradas no admin do Django, em
+#: `ChaveApiExterna` (nome + token), não aqui.
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_PERMISSION_CLASSES": ["jogadores.api.permissions.TemChaveApiValida"],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 50,
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
 }
 
 LOGGING = {
